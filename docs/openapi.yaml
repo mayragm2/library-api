@@ -99,7 +99,45 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BookPage"
-
+  /books/{id}:
+      get:
+        summary: gets an book by its id
+        responses:
+          "200":
+            description: Resource found
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Book"
+          "404":
+            description: Resource not found
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+                example:
+                  error: Resource not found
+      delete:
+        summary: deletes a book by its id
+        responses:
+          "204":
+            description: author deleted
+          "400":
+            description: Bad Request
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+                example:
+                  error: Resource not found
+          "404":
+            description: Resource not found
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+                example:
+                  error: Resource not found
 # Plantilla de un endpoint (descomentá, pegá dentro de `paths:` y completá):
 #
 #  /resource/{id}:
