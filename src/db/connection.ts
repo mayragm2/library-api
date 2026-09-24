@@ -5,7 +5,7 @@ import { Sequelize } from "sequelize";
 // 👇 Cambiá estos datos por los de tu instalación de Postgres.
 const DATABASE = "library";
 const USER = "mcueto";
-const PASSWORD = ""; // la que elegiste al instalar Postgres
+const PASSWORD = "gm2dev"; // la que elegiste al instalar Postgres
 const HOST = "localhost";
 const PORT = 5432;
 
