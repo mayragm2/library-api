@@ -1,4 +1,4 @@
-interface Book {
+export interface Book {
     id: number;
     title: string;
     year: number;
@@ -6,13 +6,13 @@ interface Book {
     available: boolean;
 }
 
-interface NewBook {
+export interface NewBook {
     id: number;
     title: string;
     year: number;
 }
 
-interface UpdateBook {
+export interface UpdateBook {
     id: number | null;
     title: string | null;
     year: number | null;

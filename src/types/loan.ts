@@ -1,4 +1,4 @@
-interface Loan {
+export interface Loan {
    id: number;
    book_id: number;
    member_name: string;
@@ -6,7 +6,7 @@ interface Loan {
    return_date: string | null;
 }
 
-interface NewLoan {
+export interface NewLoan {
    book_id: number;
    member_name: string;
 }
