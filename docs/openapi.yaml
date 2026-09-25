@@ -198,12 +198,13 @@ components:
           type: string
           example: Argentino
     Authors:
-      type: object
+      type: array
       required: [data]
-      properties:
+      items:
         data:
-          type: Author[]
+          type: Author
           example: [{id: 1, name: maria, nationality: argentine}, {id: 2, name: claudio, nationality: argentine}]
+    
     NewBook:
       type: object
       required: [id, title, year]
