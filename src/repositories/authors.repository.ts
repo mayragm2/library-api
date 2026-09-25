@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import { Book, Author } from "../models/index.js";
 
-export async function AuthorsFindAll () {
-    const row = await Author.findAll();
-    return row ? row : null;                                  // SELECT * FROM books
+export async function AuthorFindById(id: number) {
+    const row = await Author.findByPk(id);
+    return row ? row.toJSON() : null;
 }
