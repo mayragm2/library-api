@@ -1,10 +1,13 @@
 import {Router, Request, Response } from 'express'
-import {AuthorsFindAll} from '../repositories/authors.repository.js'
+import { getAuthor, getAuthors } from '../controllers/authors.controller.ts';
 const routerAuthor = Router();
 
-routerAuthor.get('/', (req, res) => {
-  res.send(AuthorsFindAll());
+routerAuthor.get('/', async (req, res) => {
+  await getAuthors(res);
 });
 
+routerAuthor.get('/:id', async (req, res) => {
+  await getAuthor(req, res);
+});
 
 export default routerAuthor;

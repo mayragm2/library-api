@@ -1,5 +1,5 @@
 import {Router, Request, Response } from 'express'
-import {BookFindById, BookFindAll, BookCreate, BookDelete} from '../repositories/books.repository.js'
+import {BookFindById, BookFindAll, BookCreate, BookDelete} from '../repositories/books.repository.ts'
 import { getBooks, postBook, deleteBook} from '../controllers/books.controller.ts';
 import router from '../docs.ts';
 export const routerBooks = Router();
@@ -13,7 +13,7 @@ routerBooks.get('/', async (req, res) => {
     res.send(items);
 })
 
-routerBooks.post('/:title/:year/:author_id', async (req, res) => {
+routerBooks.post('/', async (req, res) => {
     await postBook(req, res);
 })
 

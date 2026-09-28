@@ -19,7 +19,7 @@ app.use("/docs", docsRouter);
 
 // 👇 Acá vas a montar tus routers:
 app.use("/authors", routerAuthors);
- app.use("/books", routerBooks);
+app.use("/books", routerBooks);
 // app.use("/loans", loansRoutes);
 
 // Ya hecho. Si un pedido falla con un error que nadie atrapó (por ejemplo, un error
