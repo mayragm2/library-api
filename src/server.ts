@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import { sequelize } from "./db/connection.js";
 import docsRouter from "./docs.js";
 import routerBooks from './routes/books.routes.ts';
@@ -9,10 +9,16 @@ const PORT = 3000;
 
 app.use(express.json()); // permite leer JSON del body en POST / PUT / PATCH
 
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
+
 // Ruta de prueba: si esto responde, el servidor está levantado.
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "Library API running", docs: `http://localhost:${PORT}/docs` });
-});
+});  
 
 // Documentación interactiva del contrato (docs/openapi.yaml). Ya hecho.
 app.use("/docs", docsRouter);
@@ -37,3 +43,8 @@ async function start() {
 }
 
 start();
+
+app.use((err:Error, req: Request, res:Response, next:NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: 'Algo salió mal, intenta más tarde' });
+});

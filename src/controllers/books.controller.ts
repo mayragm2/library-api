@@ -1,5 +1,5 @@
 import {Request, Response } from 'express'
-import { remove, getAll, getById, create } from '../services/books.service.ts';
+import { remove, getAll, getById, create, update } from '../services/books.service.ts';
 
 export async function getBooks(req: Request, res: Response) {
     const { id } = req.params;
@@ -15,7 +15,7 @@ export async function getBooks(req: Request, res: Response) {
         return;
     } else {
     res.json(bookData);
-    return
+    return;
     }
 }
 export async function getAllBooks(req: Request, res: Response) {
@@ -76,16 +76,18 @@ export async function deleteBook(req: Request, res:Response) {
 }
 
 export async function updateBook (req: Request, res: Response) {
-    const {id, data} = req.body;
-    const {data:{ title, year, author_id}} = req.body;
-    if (data.title){
-       const newTitle = title;
-    }
-    if (data.year){
-        const newYear = year;
-    }
-    if (data.author_id){
-        const newAuthorId = author_id;
-    }
+    const {id} = req.params;
+    const IdToNum = Number(id);
+    const { title, year, author_id} = req.body;
+    const updateReturn = await update(IdToNum, {title, year, author_id});
 
+    if (updateReturn === "BOOK_NOT_FOUND"){
+        res.status(404).json('{"error": Book not found}');
+    } else if (updateReturn === "AUTHOR_NOT_FOUND"){
+        res.status(404).json('{"error": Author not found}');
+    } else {
+        res.status (200). json(updateReturn);
+    }
 }
+
+  
