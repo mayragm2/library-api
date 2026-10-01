@@ -3,6 +3,9 @@ import { sequelize } from "./db/connection.js";
 import docsRouter from "./docs.js";
 import routerBooks from './routes/books.routes.ts';
 import routerAuthors from './routes/authors.routes.ts';
+import routerLogin from "./routes/login.routes.ts";
+import jwt from "jsonwebtoken";
+import "dotenv/config";
 
 const app = express();
 const PORT = 3000;
@@ -26,6 +29,7 @@ app.use("/docs", docsRouter);
 // 👇 Acá vas a montar tus routers:
 app.use("/authors", routerAuthors);
 app.use("/books", routerBooks);
+app.use ("/login", routerLogin)
 // app.use("/loans", loansRoutes);
 
 // Ya hecho. Si un pedido falla con un error que nadie atrapó (por ejemplo, un error
