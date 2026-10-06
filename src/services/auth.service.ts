@@ -1,11 +1,12 @@
-import * as LoginRepository from "../repositories/login.repository.ts";
+import * as AuthRepository from "../repositories/auth.repository.ts";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
+import { create } from "domain";
 
 
 export async function Login(email:string, password:string) {
-const users = await LoginRepository.UsersFindAll();
+const users = await AuthRepository.UsersFindAll();
 if (!users){
     return "NO_USERS_FOUND"
 } else {
@@ -28,4 +29,9 @@ if (!users){
 
 }
 
+}
+
+export async function Signup(email:string, password:string, role: string) {
+    const newUser = await AuthRepository.UserSignUp(email, password, role);
+    return (newUser);
 }

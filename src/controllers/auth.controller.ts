@@ -1,9 +1,7 @@
 import {Request, Response } from 'express'
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import "dotenv/config";
 import {User} from "../types/user.ts"
-import { Login } from '../services/login.service.ts';
+import { Login , Signup} from '../services/auth.service.ts';
 
 export async function postLogin (req: Request, res: Response){
     const { email, password } = await req.body;
@@ -18,4 +16,12 @@ export async function postLogin (req: Request, res: Response){
         res.status(200).json("Authenticated")
     }
     return;
+}
+
+export async function postSignup (req: Request, res: Response){
+    const { email, password, role} = await req.body;
+    console.log(email);
+    const SignUpData = await Signup(email, password, role);
+    res.status(201).json(SignUpData);
+    return SignUpData;
 }
