@@ -3,8 +3,10 @@ import { getAuthor, getAuthors } from '../controllers/authors.controller.ts';
 import { postLogin } from '../controllers/login.controller.ts';
 const routerLogin = Router();
 
-routerLogin.post('/login', async (req, res) => {
-postLogin(req, res);
+routerLogin.post('/', async (req, res) => {
+await postLogin(req, res);
+console.log("hola");
+return;
 });
 
 export default routerLogin;

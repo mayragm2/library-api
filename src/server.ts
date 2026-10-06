@@ -17,7 +17,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
 // Ruta de prueba: si esto responde, el servidor está levantado.
 app.get("/", (req: Request, res: Response) => {
   res.json({ message: "Library API running", docs: `http://localhost:${PORT}/docs` });
@@ -29,7 +28,7 @@ app.use("/docs", docsRouter);
 // 👇 Acá vas a montar tus routers:
 app.use("/authors", routerAuthors);
 app.use("/books", routerBooks);
-app.use ("/login", routerLogin)
+app.use ("/login", routerLogin);
 // app.use("/loans", loansRoutes);
 
 // Ya hecho. Si un pedido falla con un error que nadie atrapó (por ejemplo, un error
@@ -38,6 +37,10 @@ process.on("unhandledRejection", (error) => {
   console.error("❌ Unhandled error:", error);
 });
 
+app.use((err:Error, req: Request, res:Response, next:NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: 'Algo salió mal, intenta más tarde' });
+});
 async function start() {
   await sequelize.authenticate(); // falla si Postgres no está prendido, si la base `library` no existe o si la contraseña de src/db/connection.ts está mal
   app.listen(PORT, () => {
@@ -48,7 +51,4 @@ async function start() {
 
 start();
 
-app.use((err:Error, req: Request, res:Response, next:NextFunction) => {
-  console.error(err);
-  res.status(500).json({ error: 'Algo salió mal, intenta más tarde' });
-});
+

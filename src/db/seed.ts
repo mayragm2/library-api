@@ -3,7 +3,8 @@
 // ⚠️ Borra todo lo que hubiera en las tablas authors, books y loans de la base `library`.
 
 import { sequelize } from "./connection.js";
-import { Author, Book, Loan } from "../models/index.js";
+import { Author, Book, Loan, User } from "../models/index.js";
+import bcrypt from "bcryptjs";
 
 async function seed() {
   await sequelize.sync({ force: true });
@@ -37,8 +38,15 @@ async function seed() {
     { book_id: elAleph.id, member_name: "Ana Pérez", loan_date: "2026-09-18", return_date: null },
   ]);
 
+
+  const passwordHash = await bcrypt.hash("password", 10);
+  const users = await User.bulkCreate([
+    { id: 1, email: "mayra.cueto.et28@gmail.com", role:"admin", passwordHash: passwordHash}
+
+  ])
+
   console.log("✅ Database created and loaded:");
-  console.log(`   ${await Author.count()} authors, ${await Book.count()} books, ${await Loan.count()} loans`);
+  console.log(`   ${await Author.count()} authors, ${await Book.count()} books, ${await Loan.count()} loans, ${await User.count()} users.`);
   await sequelize.close();
 }
 
