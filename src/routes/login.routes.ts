@@ -5,7 +5,6 @@ const routerLogin = Router();
 
 routerLogin.post('/', async (req, res) => {
 await postLogin(req, res);
-console.log("hola");
 return;
 });
 

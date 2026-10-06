@@ -7,12 +7,15 @@ import { Login } from '../services/login.service.ts';
 
 export async function postLogin (req: Request, res: Response){
     const { email, password } = await req.body;
-    console.log(req.body);
     const loginData = await Login(email, password);
-    if (loginData === "AUTHENTICATED"){
-        res.status(200).json("Authenticated")
+     if (loginData === "NO_USERS_FOUND"){
+        res.status(401).json({"error":"No users found"})
+    } else if (loginData === "AUTH_SERVICE_FAILED"){
+        res.status(503).json({"error":"Authentication service failed"})
+    } else if (loginData === "INVALID_CREDENTIALS"){
+        res.status(401).json({"error":"Invalid credentials"})
     } else {
-        res.status(401).json("wrong credentials")
+        res.status(200).json("Authenticated")
     }
     return;
 }

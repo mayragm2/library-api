@@ -4,7 +4,6 @@ import docsRouter from "./docs.js";
 import routerBooks from './routes/books.routes.ts';
 import routerAuthors from './routes/authors.routes.ts';
 import routerLogin from "./routes/login.routes.ts";
-import jwt from "jsonwebtoken";
 import "dotenv/config";
 
 const app = express();
