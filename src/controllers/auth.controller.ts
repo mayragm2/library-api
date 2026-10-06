@@ -2,6 +2,7 @@ import {Request, Response } from 'express'
 import "dotenv/config";
 import {User} from "../types/user.ts"
 import { Login , Signup} from '../services/auth.service.ts';
+import { stringTag } from 'yaml/util';
 
 export async function postLogin (req: Request, res: Response){
     const { email, password } = await req.body;
@@ -20,7 +21,17 @@ export async function postLogin (req: Request, res: Response){
 
 export async function postSignup (req: Request, res: Response){
     const { email, password, role} = await req.body;
-    console.log(email);
+    if (!email || !password || !role){
+        res.status(400).json({"error":"missing email, password or role"});
+        return;
+    } else if (role !== "user" && role !== "admin"){
+        res.status(400).json({"error":"Role must be either user or admin"})
+        return;
+    } else if ((email || password || role) !== String){
+        res.status(400).json({"error":"Email, password, and roles must be strings"})
+        return;
+    }
+
     const SignUpData = await Signup(email, password, role);
     res.status(201).json(SignUpData);
     return SignUpData;

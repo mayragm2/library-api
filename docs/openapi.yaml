@@ -9,7 +9,7 @@ info:
   title: Library API
   version: 1.0.0
   description: |
-    Books, authors and loans of a library.
+    Books, authors, loans and users of a library.
 
     **Conventions**
     - All requests and responses are JSON.
@@ -19,32 +19,89 @@ info:
 servers:
   - url: http://localhost:3000
 
-# ──────────────────────────────────────────────────────────────
-# Endpoints. Un bloque por ruta; dentro, un bloque por verbo.
-# Empezá por /authors. Abajo hay una plantilla comentada para copiar.
-# ──────────────────────────────────────────────────────────────
-paths: 
-  /authors:
-    get:
-      summary: gets a list of authors
+# No endpoint requires a token yet. Add `security: [{ bearerAuth: [] }]` per operation when they do.
+security: []
+
+tags:
+  - name: Auth
+  - name: Authors
+  - name: Books
+
+paths:
+  /auth/signup:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewUser"
       responses:
-        "200":
-          description: Resource found
+        "201":
+          description: User created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Authors"
-        "404":
-          description: Resource not found
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Missing field, invalid role or non-string value
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
               example:
-                error: Resource not found
+                error: Role must be either user or admin
+  /auth/login:
+    post:
+      summary: Authenticate a user and get a JWT (valid for 1 hour)
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials or no users registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Invalid credentials
+        "503":
+          description: Authentication service failed (JWT secret not configured)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Authentication service failed
+
+  /authors:
+    get:
+      summary: Get the list of authors
+      tags: [Authors]
+      responses:
+        "200":
+          description: List of authors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Authors"
   /authors/{id}:
     get:
-      summary: gets an author by its id
+      summary: Get an author by id
+      tags: [Authors]
       parameters:
         - name: id
           in: path
@@ -52,21 +109,30 @@ paths:
           schema: { type: integer }
       responses:
         "200":
-          description: Resource found
+          description: Author found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Author"
-        "404":
-          description: Resource not found
+        "400":
+          description: Id is not a number
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
               example:
-                error: Resource not found
+                error: ID is not a number
+        "404":
+          description: Author not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Author not found
     delete:
-      summary: deletes an author by its id
+      summary: Delete an author (only if it has no books)
+      tags: [Authors]
       parameters:
         - name: id
           in: path
@@ -74,31 +140,32 @@ paths:
           schema: { type: integer }
       responses:
         "204":
-          description: author deleted
+          description: Author deleted
         "400":
-          description: Bad Request
+          description: Id is not a number
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
               example:
-                error: Resource not found
+                error: ID is not a number
         "404":
-          description: Resource not found
+          description: Author not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
               example:
-                error: Resource not found
+                error: Author not found
         "409":
-          description: author has books
+          description: Author has books
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
               example:
                 error: Cannot delete author that has books
+
   /books:
     get:
       summary: Search books with filters and pagination
@@ -106,23 +173,18 @@ paths:
       parameters:
         - name: title
           in: query
-          required: false
           schema: { type: string }
         - name: available
           in: query
-          required: false
           schema: { type: boolean }
         - name: author_id
           in: query
-          required: false
           schema: { type: integer }
         - name: page
           in: query
-          required: false
           schema: { type: integer, minimum: 1, default: 1 }
         - name: limit
           in: query
-          required: false
           schema: { type: integer, minimum: 1, default: 10 }
       responses:
         "200":
@@ -153,13 +215,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Book"
+        "400":
+          description: Year or author id is not a number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "404":
           description: Author not found
           content:
             application/json:
               schema:
-              $ref: "#/components/schemas/Error"
-              
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Author not found
+
   /books/{id}:
     get:
       summary: Get a book by id
@@ -175,20 +245,60 @@ paths:
           content:
             application/json:
               schema:
-              $ref: "#/components/schemas/Book"
-        "400":      
-          description: Id is not a number        
-          content:        
-            application/json:            
-              schema:              
-              $ref: "#/components/schemas/Error"      
-        "404":      
-          description: Book not found        
-          content:          
-            application/json:          
-              schema:              
-              $ref: "#/components/schemas/Error"
-
+                $ref: "#/components/schemas/Book"
+        "400":
+          description: Id is not a number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: ID is not a number
+        "404":
+          description: Book not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Book not found
+    put:
+      summary: Replace all fields of a book
+      tags: [Books]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewBook"
+      responses:
+        "200":
+          description: Book replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          description: Id is not a number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: ID is not a number
+        "404":
+          description: Book or author not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Book not found
     patch:
       summary: Update some fields of a book
       tags: [Books]
@@ -216,75 +326,58 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+              example:
+                error: ID is not a number
         "404":
           description: Book or author not found
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-      put:  
-        summary: Replace all fields of a book    
-        tags: [Books]    
-        parameters:    
-          - name: id      
-            in: path        
-            required: true        
-            schema: { type: integer }    
-            requestBody:      
-              required: true      
-              content:        
-                application/json:        
-                  schema:            
-                  $ref: "#/components/schemas/NewBook"    
-        responses:      
-          "200":      
-            description: Book replaced        
-            content:        
-              application/json:          
-                schema:              
-                $ref: "#/components/schemas/Book"      
-          "400":      
-            description: Id is not a number        
-            content:        
-              application/json:          
-                schema:              
-                $ref: "#/components/schemas/Error"      
-          "404":        
-            description: Book or author not found        
-            content:        
-              application/json:          
-                schema:              
-                $ref: "#/components/schemas/Error"  
-        delete:    
-          summary: Delete a book (only if it was never loaned)    
-          tags: [Books]    
-          parameters:    
-            - name: id      
-              in: path        
-              required: true        
-              schema: { type: integer }    
-          responses:    
-            "204":      
-              description: Book deleted      
-            "400":        
-              description: Id is not a number        
-              content:        
-                application/json:          
-                  schema:              
-                  $ref: "#/components/schemas/Error"     
-            "404":      
-              description: Book not found        
-              content:        
-                application/json:          
-                  schema:              
-                  $ref: "#/components/schemas/Error"      
-            "409":        
-              description: Book has loans      
-              content:          
-                application/json:          
-                  schema:              
-                  $ref: "#/components/schemas/Error"
+              example:
+                error: Book not found
+    delete:
+      summary: Delete a book (only if it was never loaned)
+      tags: [Books]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Book deleted
+        "400":
+          description: Id is not a number
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: ID is not a number
+        "404":
+          description: Book not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Book not found
+        "409":
+          description: Book has loans
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Book has loans
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     Error:
       type: object
@@ -293,6 +386,67 @@ components:
         error:
           type: string
           example: Book not found
+    Date:
+      type: string
+      format: date
+      description: YYYY-MM-DD
+      example: "2026-04-02"
+
+    # ── Auth ──
+    NewUser:
+      type: object
+      required: [email, password, role]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 200
+          example: mayra@example.com
+        password:
+          type: string
+          format: password
+          example: s3cret-pass
+        role:
+          type: string
+          enum: [user, admin]
+          example: user
+    User:
+      type: object
+      required: [id, email, role]
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          format: email
+          example: mayra@example.com
+        role:
+          type: string
+          enum: [user, admin]
+          example: user
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: mayra@example.com
+        password:
+          type: string
+          format: password
+          example: s3cret-pass
+    LoginResponse:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          description: JWT with claims `email` and `role`, expires in 1 hour
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    # ── Authors ──
     Author:
       type: object
       required: [id, name, nationality]
@@ -302,21 +456,21 @@ components:
           example: 1
         name:
           type: string
+          maxLength: 100
           example: Julian Kartun
         nationality:
           type: string
+          maxLength: 50
           example: Argentino
     Authors:
       type: array
-      required: [data]
       items:
-        data:
-          type: Author
-          example: [{id: 1, name: maria, nationality: argentine}, {id: 2, name: claudio, nationality: argentine}]
-    
+        $ref: "#/components/schemas/Author"
+
+    # ── Books ──
     NewBook:
       type: object
-      required: [id, title, year]
+      required: [title, year, author_id]
       properties:
         title:
           type: string
@@ -327,19 +481,24 @@ components:
           type: integer
           minimum: 1000
           maximum: 2100
-          example: 1991
+          example: 1997
         author_id:
           type: integer
           example: 2
     UpdateBook:
       type: object
+      minProperties: 1
       properties:
         title:
           type: string
+          minLength: 1
+          maxLength: 200
           example: Harry Potter and the Philosopher's Stone
         year:
           type: integer
-          example: 1991
+          minimum: 1000
+          maximum: 2100
+          example: 1997
         author_id:
           type: integer
           example: 2
@@ -355,20 +514,21 @@ components:
           example: Harry Potter and the Philosopher's Stone
         year:
           type: integer
-          example: 1991
+          example: 1997
         author_id:
           type: integer
           example: 2
         available:
-          type: bool
+          type: boolean
           example: false
-
     BookPage:
       type: object
-      properties: 
+      required: [data, total, page, limit]
+      properties:
         data:
-          type: Book[]
-          example: [{id: 1, title: Harry Potter and the Philosopher's Stone, year: 1991, author_id: 2, available: false}]
+          type: array
+          items:
+            $ref: "#/components/schemas/Book"
         total:
           type: integer
           example: 650
@@ -378,13 +538,11 @@ components:
         limit:
           type: integer
           example: 10
-    Date:
-      type: string
-      description: YYYY-MM-DD
-      example: 2026-04-02
+
+    # ── Loans ──
     Loan:
       type: object
-      required: [id, book_id, member_name, loan_date]
+      required: [id, book_id, member_name, loan_date, return_date]
       properties:
         id:
           type: integer
@@ -394,14 +552,16 @@ components:
           example: 5
         member_name:
           type: string
+          maxLength: 100
           example: Charles
         loan_date:
-          type: Date
-          example: 2025-12-13
+          $ref: "#/components/schemas/Date"
         return_date:
-          type: Date
+          type: string
+          format: date
           nullable: true
-          example: 2026-09-12
+          example: "2026-09-12"
+          description: null while the book has not been returned
     NewLoan:
       type: object
       required: [book_id, member_name]
@@ -411,5 +571,5 @@ components:
           example: 5
         member_name:
           type: string
-          nullable: false
+          maxLength: 100
           example: Charles
