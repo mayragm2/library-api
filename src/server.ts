@@ -7,6 +7,7 @@ import routerAuth from "./routes/auth.routes.ts";
 import "dotenv/config";
 import { JwtPayload } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
+import "dotenv/config";
 
 declare global {
   namespace Express {
@@ -28,17 +29,21 @@ app.use((req, res, next) => {
 
 // Middleware de autenticación
 function authenticateToken(req: Request, res: Response, next:NextFunction) {
-const authHeader = req.headers.authorization;
-const token = authHeader?.split(" ")[1];
-if (!token) return res.sendStatus(401);
-const secret = process.env.JWT_SECRET;
-if (!secret) return res.sendStatus(500);
-jwt.verify(token, secret, (err:Error | null, payload:JwtPayload | string | undefined) => {
-if (err) return res.sendStatus(403);
-if (!payload || typeof payload === "string") return res.sendStatus(403);
-req.user = payload;
-next();
-});
+  const authHeader = req.headers.authorization;
+  console.log(authHeader);
+  const token = authHeader?.split(" ")[1];
+    if (!token) {
+      return res.sendStatus(401); 
+    } 
+    
+  const secret = process.env.JWT_SECRET;
+    if (!secret) return res.sendStatus(500);
+    jwt.verify(token, secret, (err:Error | null, payload:JwtPayload | string | undefined) => {
+        if (err) return res.sendStatus(403);
+        if (!payload || typeof payload === "string") return res.sendStatus(403);
+      req.user = payload;
+      next();
+    });
 }
 // Middleware de autorización por rol
 function authorizeRole(role: string) {

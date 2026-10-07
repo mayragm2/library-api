@@ -2,6 +2,7 @@ import {Request, Response } from 'express'
 import "dotenv/config";
 import {User} from "../types/user.ts"
 import { Login , Signup} from '../services/auth.service.ts';
+import { log } from 'node:console';
 
 export async function postLogin (req: Request, res: Response){
     const { email, password } = await req.body;
@@ -13,7 +14,7 @@ export async function postLogin (req: Request, res: Response){
     } else if (loginData === "INVALID_CREDENTIALS"){
         res.status(401).json({"error":"Invalid credentials"})
     } else {
-        res.status(200).json("Authenticated")
+        res.status(200).json(loginData)
     }
     return;
 }
