@@ -8,6 +8,7 @@ import "dotenv/config";
 import { JwtPayload } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
+import winston from "winston";
 
 declare global {
   namespace Express {
@@ -20,17 +21,45 @@ declare global {
 const app = express();
 const PORT = 3000;
 
+//Initialize winston logs
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  defaultMeta: { service: 'user-service' },
+  transports: [
+    //
+    // - Write all logs with importance level of `error` or higher to `error.log`
+    //   (i.e., error, fatal, but not other levels)
+    //
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    //
+    // - Write all logs with importance level of `info` or higher to `combined.log`
+    //   (i.e., fatal, error, warn, and info, but not trace)
+    //
+    new winston.transports.File({ filename: 'combined.log' }),
+  ],
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.simple(),
+  }));
+}
+
 app.use(express.json()); // permite leer JSON del body en POST / PUT / PATCH
 
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  logger.log({
+  level: 'info',
+  message: `[${new Date().toISOString()}] ${req.method} ${req.url}`
+});
+  
   next();
 });
 
 // Middleware de autenticación
 function authenticateToken(req: Request, res: Response, next:NextFunction) {
   const authHeader = req.headers.authorization;
-  console.log(authHeader);
   const token = authHeader?.split(" ")[1];
     if (!token) {
       return res.sendStatus(401); 
@@ -47,10 +76,10 @@ function authenticateToken(req: Request, res: Response, next:NextFunction) {
 }
 // Middleware de autorización por rol
 function authorizeRole(role: string) {
-return (req:Request, res:Response, next:NextFunction) => {
-if (!req.user || req.user.role !== role) return res.sendStatus(403);
-next();
-};
+  return (req:Request, res:Response, next:NextFunction) => {
+      if (!req.user || req.user.role !== role) return res.sendStatus(403);
+    next();
+  };
 }
 // Ruta protegida: solo admins
 app.get("/admin/dashboard", authenticateToken, authorizeRole("admin"), (req, res) => {
@@ -76,11 +105,12 @@ app.use ("/auth", routerAuth);
 process.on("unhandledRejection", (error) => {
   console.error("❌ Unhandled error:", error);
 });
-
+// Middleware de errores
 app.use((err:Error, req: Request, res:Response, next:NextFunction) => {
   console.error(err);
   res.status(500).json({ error: 'Algo salió mal, intenta más tarde' });
 });
+
 async function start() {
   await sequelize.authenticate(); // falla si Postgres no está prendido, si la base `library` no existe o si la contraseña de src/db/connection.ts está mal
   app.listen(PORT, () => {
