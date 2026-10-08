@@ -8,7 +8,9 @@ import "dotenv/config";
 import { JwtPayload } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
-import winston from "winston";
+import logger from "./logger.ts";
+import { errorHandler } from "./middlewares/error.middleware.ts";
+import { stack } from "sequelize/lib/utils";
 
 declare global {
   namespace Express {
@@ -20,31 +22,6 @@ declare global {
 
 const app = express();
 const PORT = 3000;
-
-//Initialize winston logs
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.json(),
-  defaultMeta: { service: 'user-service' },
-  transports: [
-    //
-    // - Write all logs with importance level of `error` or higher to `error.log`
-    //   (i.e., error, fatal, but not other levels)
-    //
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    //
-    // - Write all logs with importance level of `info` or higher to `combined.log`
-    //   (i.e., fatal, error, warn, and info, but not trace)
-    //
-    new winston.transports.File({ filename: 'combined.log' }),
-  ],
-});
-
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.simple(),
-  }));
-}
 
 app.use(express.json()); // permite leer JSON del body en POST / PUT / PATCH
 
@@ -99,11 +76,12 @@ app.use("/authors", routerAuthors);
 app.use("/books", routerBooks);
 app.use ("/auth", routerAuth);
 // app.use("/loans", loansRoutes);
+app.use(errorHandler); // siempre último
 
 // Ya hecho. Si un pedido falla con un error que nadie atrapó (por ejemplo, un error
 // de la base), lo mostramos en la terminal en vez de apagar el servidor.
 process.on("unhandledRejection", (error) => {
-  console.error("❌ Unhandled error:", error);
+  logger.error("Unhandeled rejection", { stack: (error as Error)?.stack ?? String(error)})
 });
 // Middleware de errores
 app.use((err:Error, req: Request, res:Response, next:NextFunction) => {
